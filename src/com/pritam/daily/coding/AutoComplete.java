@@ -3,11 +3,14 @@
  */
 package com.pritam.daily.coding;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map.Entry;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -23,14 +26,14 @@ public class AutoComplete {
 		private char character;
 		private HashMap<Character, TrieNode> children;
 		private boolean terminates;
-		private List<String> phrasesStartingHere;
+		private Set<String> phrasesStartingHere;
 
 		/**
 		 * Default constructor that generally would be invoked for root node
 		 */
 		public TrieNode() {
 			children = new HashMap<>();
-			phrasesStartingHere = new ArrayList<>();
+			phrasesStartingHere = new LinkedHashSet<>();
 		}
 
 		public TrieNode(char character) {
@@ -97,8 +100,15 @@ public class AutoComplete {
 		/**
 		 * @return the phrasesStartingHere
 		 */
-		public List<String> getPhrasesStartingHere() {
+		public Set<String> getPhrasesStartingHere() {
 			return phrasesStartingHere;
+		}
+
+		/**
+		 * @return the children
+		 */
+		public HashMap<Character, TrieNode> getChildren() {
+			return children;
 		}
 
 	}
@@ -122,15 +132,64 @@ public class AutoComplete {
 	 * @param prefix
 	 * @return
 	 */
-	public List<String> matches(String prefix) {
+	public Set<String> matches(String prefix) {
+		TrieNode node = find(prefix);
+		// Uses the pre-computed set which reduces the time complexity but increases the
+		// space complexity
+		if (node == null) {
+			return Collections.emptySet();
+		} else if (node.terminates()) {
+			return new HashSet<>(Arrays.asList(prefix));
+		} else {
+			return node.getPhrasesStartingHere().stream().map(phrase -> prefix + phrase).collect(Collectors.toSet());
+		}
+	}
+
+	/**
+	 * Return the list of strings that matches the given prefix. Result is
+	 * calculated at run time.
+	 * 
+	 * @param prefix
+	 * @return
+	 */
+	public Set<String> matchesAtRuntime(String prefix) {
+		TrieNode node = find(prefix);
+		if (node == null) {
+			return Collections.emptySet();
+		} else if (node.terminates()) {
+			return new HashSet<>(Arrays.asList(prefix));
+		} else {
+			return matches(node, prefix);
+		}
+	}
+
+	private Set<String> matches(TrieNode node, String prefix) {
+		final Set<String> matches = new LinkedHashSet<>();
+		for (Entry<Character, TrieNode> entry : node.getChildren().entrySet()) {
+			if (entry.getValue().terminates()) {
+				matches.add(prefix + entry.getKey());
+			} else {
+				matches.addAll(matches(entry.getValue(), prefix + entry.getKey()));
+			}
+		}
+		return matches;
+	}
+
+	/**
+	 * Find the node that ends in given prefix
+	 * 
+	 * @param prefix
+	 * @return
+	 */
+	private TrieNode find(String prefix) {
 		TrieNode lastNode = root;
 		for (int i = 0; i < prefix.length(); i++) {
 			lastNode = lastNode.getChild(prefix.charAt(i));
 			if (lastNode == null) {
-				return Collections.emptyList();
+				return null;
 			}
 		}
-		return lastNode.getPhrasesStartingHere().stream().map(phrase -> prefix + phrase).collect(Collectors.toList());
+		return lastNode;
 	}
 
 	/**
@@ -139,6 +198,7 @@ public class AutoComplete {
 	public static void main(String[] args) {
 		AutoComplete system = new AutoComplete("dog", "deer", "deal", "donut");
 		System.out.println(system.matches("do"));
+		System.out.println(system.matchesAtRuntime("do"));
 	}
 
 }
