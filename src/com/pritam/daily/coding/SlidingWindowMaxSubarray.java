@@ -25,7 +25,7 @@ public class SlidingWindowMaxSubarray {
 		Deque<Integer> deque = new LinkedList<>();
 
 		// Pre-compute the dqueue for first window of k
-		int i = 0;
+		int i;
 		for (i = 0; i < k; i++) {
 			while (!deque.isEmpty() && arr[i] >= arr[deque.peekFirst()]) {
 				deque.removeFirst();
