@@ -85,8 +85,25 @@ public class TextJustification {
 		return lineCosts;
 	}
 
-	private static List<String> findMinimumCostArrangement(int[][] lineCosts, List<String> words) {
+	/**
+	 * Find the minimum cost arrangement from lineCosts array.
+	 * 
+	 * @param lineCosts
+	 * @param words
+	 * @return
+	 */
+	private static int[] findMinimumCostArrangement(int[][] lineCosts) {
+		int size = lineCosts.length;
+		int[] minCosts = new int[size];
+		for (int i = 0; i < size; i++) {
+			minCosts[i] = lineCosts[0][i];
+			for (int j = 0; j < i; j++) {
+				if (lineCosts[j][i] == Integer.MAX_VALUE) {
+					continue;
+				}
 
+			}
+		}
 		return null;
 	}
 
